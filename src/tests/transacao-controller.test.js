@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 jest.mock("../service/transacao-service", () => ({
     criarTransacao: jest.fn(),
     listarTransacoes: jest.fn(),
@@ -9,12 +8,6 @@ jest.mock("../service/transacao-service", () => ({
 
 const TransacaoController = require("../controllers/transacoes-controller");
 const TransacaoService = require("../service/transacao-service");
-=======
-const TransacaoController = require("../src/controllers/transacao-controller");
-const TransacaoService = require("../src/service/transacao-service");
-
-jest.mock("../src/service/transacao-service");
->>>>>>> Stashed changes
 
 function mockResponse() {
     const res = {};
@@ -53,15 +46,12 @@ describe("TransacaoController", () => {
                 message: "Transação criada com sucesso",
                 id: 1
             });
-<<<<<<< Updated upstream
 
             expect(TransacaoService.criarTransacao)
                 .toHaveBeenCalledWith(
                     150.75,
                     new Date("2026-01-10T14:30:00Z")
                 );
-=======
->>>>>>> Stashed changes
         });
 
         test("Deve retornar 400 quando faltar valor", async () => {
@@ -79,7 +69,6 @@ describe("TransacaoController", () => {
             expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
         });
 
-<<<<<<< Updated upstream
         test("Deve retornar 400 quando faltar data", async () => {
             const req = {
                 body: {
@@ -95,8 +84,6 @@ describe("TransacaoController", () => {
             expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
         });
 
-=======
->>>>>>> Stashed changes
         test("Deve retornar 422 para valor negativo", async () => {
             const req = {
                 body: {
@@ -110,16 +97,10 @@ describe("TransacaoController", () => {
             await TransacaoController.criarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(422);
-<<<<<<< Updated upstream
             expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
         });
 
         test("Deve retornar 422 quando valor for string", async () => {
-=======
-        });
-
-        test("Deve retornar 422 para valor que não seja número", async () => {
->>>>>>> Stashed changes
             const req = {
                 body: {
                     valor: "150",
@@ -162,7 +143,6 @@ describe("TransacaoController", () => {
             await TransacaoController.criarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(422);
-<<<<<<< Updated upstream
             expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
         });
 
@@ -190,8 +170,6 @@ describe("TransacaoController", () => {
             } finally {
                 consoleSpy.mockRestore();
             }
-=======
->>>>>>> Stashed changes
         });
     });
 
@@ -213,7 +191,6 @@ describe("TransacaoController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(transacoes);
         });
-<<<<<<< Updated upstream
 
         test("Deve retornar lista vazia quando não houver transações", async () => {
             const req = {};
@@ -226,8 +203,6 @@ describe("TransacaoController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith([]);
         });
-=======
->>>>>>> Stashed changes
     });
 
     describe("buscarTransacaoPorId", () => {
@@ -238,16 +213,12 @@ describe("TransacaoController", () => {
             };
 
             const res = mockResponse();
-<<<<<<< Updated upstream
 
             const transacao = {
                 id: 1,
                 valor: 150,
                 data: "2026-01-10T14:30:00Z"
             };
-=======
-            const transacao = { id: 1, valor: 150 };
->>>>>>> Stashed changes
 
             TransacaoService.buscarTransacaoPorId.mockResolvedValue(transacao);
 
@@ -257,11 +228,7 @@ describe("TransacaoController", () => {
             expect(res.json).toHaveBeenCalledWith(transacao);
         });
 
-<<<<<<< Updated upstream
         test("Deve retornar 404 quando transação não existir", async () => {
-=======
-        test("Deve retornar 404 quando não encontrar transação", async () => {
->>>>>>> Stashed changes
             const req = {
                 params: { id: "999" }
             };
@@ -274,7 +241,6 @@ describe("TransacaoController", () => {
 
             expect(res.status).toHaveBeenCalledWith(404);
         });
-<<<<<<< Updated upstream
 
         test("Deve retornar 422 para ID inválido", async () => {
             const req = {
@@ -289,8 +255,6 @@ describe("TransacaoController", () => {
             expect(TransacaoService.buscarTransacaoPorId)
                 .not.toHaveBeenCalled();
         });
-=======
->>>>>>> Stashed changes
     });
 
     describe("atualizarTransacao", () => {
@@ -311,10 +275,6 @@ describe("TransacaoController", () => {
             await TransacaoController.atualizarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
             expect(TransacaoService.atualizarTransacao)
                 .toHaveBeenCalledWith(
                     "1",
@@ -340,7 +300,6 @@ describe("TransacaoController", () => {
 
             expect(res.status).toHaveBeenCalledWith(404);
         });
-<<<<<<< Updated upstream
 
         test("Deve retornar 422 ao atualizar com valor negativo", async () => {
             const req = {
@@ -359,8 +318,6 @@ describe("TransacaoController", () => {
             expect(TransacaoService.atualizarTransacao)
                 .not.toHaveBeenCalled();
         });
-=======
->>>>>>> Stashed changes
     });
 
     describe("deletarTransacao", () => {
@@ -393,7 +350,6 @@ describe("TransacaoController", () => {
 
             expect(res.status).toHaveBeenCalledWith(404);
         });
-<<<<<<< Updated upstream
 
         test("Deve retornar 422 ao deletar com ID inválido", async () => {
             const req = {
@@ -408,7 +364,5 @@ describe("TransacaoController", () => {
             expect(TransacaoService.deletarTransacao)
                 .not.toHaveBeenCalled();
         });
-=======
->>>>>>> Stashed changes
     });
 });
