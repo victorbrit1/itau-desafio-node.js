@@ -1,7 +1,13 @@
-const TransacaoController = require("../src/controllers/transacao-controller");
-const TransacaoService = require("../src/service/transacao-service");
+jest.mock("../service/transacao-service", () => ({
+    criarTransacao: jest.fn(),
+    listarTransacoes: jest.fn(),
+    buscarTransacaoPorId: jest.fn(),
+    atualizarTransacao: jest.fn(),
+    deletarTransacao: jest.fn()
+}));
 
-jest.mock("../src/service/transacao-service");
+const TransacaoController = require("../controllers/transacoes-controller");
+const TransacaoService = require("../service/transacao-service");
 
 function mockResponse() {
     const res = {};
@@ -40,12 +46,33 @@ describe("TransacaoController", () => {
                 message: "Transação criada com sucesso",
                 id: 1
             });
+
+            expect(TransacaoService.criarTransacao)
+                .toHaveBeenCalledWith(
+                    150.75,
+                    new Date("2026-01-10T14:30:00Z")
+                );
         });
 
         test("Deve retornar 400 quando faltar valor", async () => {
             const req = {
                 body: {
                     data: "2026-01-10T14:30:00Z"
+                }
+            };
+
+            const res = mockResponse();
+
+            await TransacaoController.criarTransacao(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
+        });
+
+        test("Deve retornar 400 quando faltar data", async () => {
+            const req = {
+                body: {
+                    valor: 100
                 }
             };
 
@@ -70,9 +97,10 @@ describe("TransacaoController", () => {
             await TransacaoController.criarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(422);
+            expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
         });
 
-        test("Deve retornar 422 para valor que não seja número", async () => {
+        test("Deve retornar 422 quando valor for string", async () => {
             const req = {
                 body: {
                     valor: "150",
@@ -115,6 +143,33 @@ describe("TransacaoController", () => {
             await TransacaoController.criarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(422);
+            expect(TransacaoService.criarTransacao).not.toHaveBeenCalled();
+        });
+
+        test("Deve retornar 500 quando o Service falhar", async () => {
+            const req = {
+                body: {
+                    valor: 100,
+                    data: "2026-01-10T14:30:00Z"
+                }
+            };
+
+            const res = mockResponse();
+
+            TransacaoService.criarTransacao.mockRejectedValue(
+                new Error("Erro no banco")
+            );
+
+            const consoleSpy = jest.spyOn(console, "error")
+                .mockImplementation(() => {});
+
+            try {
+                await TransacaoController.criarTransacao(req, res);
+
+                expect(res.status).toHaveBeenCalledWith(500);
+            } finally {
+                consoleSpy.mockRestore();
+            }
         });
     });
 
@@ -136,6 +191,18 @@ describe("TransacaoController", () => {
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(transacoes);
         });
+
+        test("Deve retornar lista vazia quando não houver transações", async () => {
+            const req = {};
+            const res = mockResponse();
+
+            TransacaoService.listarTransacoes.mockResolvedValue([]);
+
+            await TransacaoController.listarTransacoes(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith([]);
+        });
     });
 
     describe("buscarTransacaoPorId", () => {
@@ -146,7 +213,12 @@ describe("TransacaoController", () => {
             };
 
             const res = mockResponse();
-            const transacao = { id: 1, valor: 150 };
+
+            const transacao = {
+                id: 1,
+                valor: 150,
+                data: "2026-01-10T14:30:00Z"
+            };
 
             TransacaoService.buscarTransacaoPorId.mockResolvedValue(transacao);
 
@@ -156,7 +228,7 @@ describe("TransacaoController", () => {
             expect(res.json).toHaveBeenCalledWith(transacao);
         });
 
-        test("Deve retornar 404 quando não encontrar transação", async () => {
+        test("Deve retornar 404 quando transação não existir", async () => {
             const req = {
                 params: { id: "999" }
             };
@@ -168,6 +240,20 @@ describe("TransacaoController", () => {
             await TransacaoController.buscarTransacaoPorId(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
+        });
+
+        test("Deve retornar 422 para ID inválido", async () => {
+            const req = {
+                params: { id: "abc" }
+            };
+
+            const res = mockResponse();
+
+            await TransacaoController.buscarTransacaoPorId(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(422);
+            expect(TransacaoService.buscarTransacaoPorId)
+                .not.toHaveBeenCalled();
         });
     });
 
@@ -189,6 +275,7 @@ describe("TransacaoController", () => {
             await TransacaoController.atualizarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
+
             expect(TransacaoService.atualizarTransacao)
                 .toHaveBeenCalledWith(
                     "1",
@@ -213,6 +300,24 @@ describe("TransacaoController", () => {
             await TransacaoController.atualizarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
+        });
+
+        test("Deve retornar 422 ao atualizar com valor negativo", async () => {
+            const req = {
+                params: { id: "1" },
+                body: {
+                    valor: -50,
+                    data: "2026-01-10T14:30:00Z"
+                }
+            };
+
+            const res = mockResponse();
+
+            await TransacaoController.atualizarTransacao(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(422);
+            expect(TransacaoService.atualizarTransacao)
+                .not.toHaveBeenCalled();
         });
     });
 
@@ -245,6 +350,20 @@ describe("TransacaoController", () => {
             await TransacaoController.deletarTransacao(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
+        });
+
+        test("Deve retornar 422 ao deletar com ID inválido", async () => {
+            const req = {
+                params: { id: "abc" }
+            };
+
+            const res = mockResponse();
+
+            await TransacaoController.deletarTransacao(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(422);
+            expect(TransacaoService.deletarTransacao)
+                .not.toHaveBeenCalled();
         });
     });
 });

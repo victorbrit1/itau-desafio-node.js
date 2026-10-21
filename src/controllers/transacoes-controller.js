@@ -227,4 +227,10 @@ async function deletarTransacao(req, res) {
     }
 }
 
-module.exports = { criarTransacao };
+module.exports = {
+    criarTransacao,
+    listarTransacoes,
+    buscarTransacaoPorId,
+    atualizarTransacao,
+    deletarTransacao
+};
