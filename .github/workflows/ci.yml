@@ -38,3 +38,4 @@ jobs:
 
       - name: Build da imagem Docker
         run: docker build -t itau-api .
+        
