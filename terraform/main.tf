@@ -119,7 +119,7 @@ resource "azurerm_linux_virtual_machine" "itau" {
   resource_group_name = azurerm_resource_group.itau.name
   location            = azurerm_resource_group.itau.location
 
-  size           = "Standard_F1als_v7"
+  size           = "Standard_D2as_v4"
   admin_username = "azureuser"
 
   network_interface_ids = [

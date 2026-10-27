@@ -1,4 +1,14 @@
 node_modules
 .env
+.env.*
 .git
-.gitignore 
+.gitignore
+.github
+terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+coverage
+dist
+postman

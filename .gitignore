@@ -1,2 +1,26 @@
 node_modules/
+dist/
+coverage/
+npm-debug.log*
+*.log
+
 .env
+.env.*
+!.env.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+terraform/backup-state.json
