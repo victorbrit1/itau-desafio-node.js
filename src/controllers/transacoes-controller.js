@@ -227,10 +227,19 @@ async function deletarTransacao(req, res) {
     }
 }
 
+function healthCheck(req, res) {
+    return res.status(200).json({
+        status: "UP",
+        message: "API funcionando"
+    });
+}
+
+
 module.exports = {
     criarTransacao,
     listarTransacoes,
     buscarTransacaoPorId,
     atualizarTransacao,
-    deletarTransacao
+    deletarTransacao,
+    healthCheck
 };
