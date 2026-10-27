@@ -3,10 +3,16 @@ name: CI - Itau
 on:
   push:
     branches:
-      - ci
+      - main
+
+# Controle de execuções simultâneas
+concurrency:
+  group: ghcr-itau-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   ci:
@@ -36,6 +42,27 @@ jobs:
       - name: Fazer build da aplicação
         run: npm run build
 
-      - name: Build da imagem Docker
-        run: docker build -t itau-api .
-        
+      # inicio CD
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preparar nome da imagem
+        run: |
+          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Construir imagem Docker
+        run: |
+          docker build \
+            -t $IMAGE_NAME:${{ github.sha }} \
+            -t $IMAGE_NAME:latest \
+            .
+
+      - name: Publicar imagem no GHCR
+        run: |
+          docker push $IMAGE_NAME:${{ github.sha }}
+          docker push $IMAGE_NAME:latest
