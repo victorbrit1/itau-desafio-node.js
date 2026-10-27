@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   ci:
@@ -17,13 +16,11 @@ jobs:
       - name: Baixar código
         uses: actions/checkout@v4
 
-      # - name: Cache npm
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.npm
-      #     key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      #     restore-keys: |
-      #       npm-${{ runner.os }}-
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm' 
 
       - name: Instalar dependências
         run: npm ci
@@ -34,12 +31,8 @@ jobs:
       - name: Executar testes
         run: npm test
 
-      - name: Fazer build
-        run: npm start
+      - name: Fazer build da aplicação
+        run: npm run build
 
-      - name: Build de imagem Docker
+      - name: Build da imagem Docker
         run: docker build -t itau-api .
-
-
-
-
