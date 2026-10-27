@@ -4,6 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
+    "build": "nest build",
     "start": "nodemon src/server.js",
     "test": "jest --runInBand"
   },
