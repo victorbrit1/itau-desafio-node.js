@@ -66,3 +66,81 @@ jobs:
         run: |
           docker push $IMAGE_NAME:${{ github.sha }}
           docker push $IMAGE_NAME:latest
+
+  deploy:
+    name: CD - Deploy Azure
+    needs: ci
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Login na Azure via OIDC
+        id: azure_login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Descobrir IP do runner
+        id: ip
+        run: |
+          IP=$(curl -4 -fsS https://api.ipify.org)
+          echo "address=$IP" >> "$GITHUB_OUTPUT"
+
+      - name: Liberar SSH temporariamente
+        env:
+          RUNNER_IP: ${{ steps.ip.outputs.address }}
+        run: |
+          az network nsg rule create \
+            --resource-group rg-itau-demo \
+            --nsg-name nsg-itau \
+            --name github-deploy-temporario \
+            --priority 250 \
+            --direction Inbound \
+            --access Allow \
+            --protocol Tcp \
+            --source-address-prefixes "$RUNNER_IP/32" \
+            --destination-address-prefixes "*" \
+            --destination-port-ranges 22 \
+            --output none
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
+          port: 22
+          timeout: 60s
+          command_timeout: 5m
+          script: |
+            set -e
+            cd /opt/itau-node
+
+            docker compose pull app
+            docker compose up -d --no-deps app
+
+            for i in $(seq 1 15); do
+              if curl -fsS http://127.0.0.1:3000/ > /dev/null; then
+                echo "Deploy concluido com sucesso!"
+                exit 0
+              fi
+              sleep 2
+            done
+
+            docker compose logs --tail=50 app
+            exit 1
+
+      - name: Remover regra SSH temporária
+        if: always() && steps.azure_login.outcome == 'success'
+        run: |
+          az network nsg rule delete \
+            --resource-group rg-itau-demo \
+            --nsg-name nsg-itau \
+            --name github-deploy-temporario \
+            --output none
