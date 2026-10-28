@@ -95,6 +95,8 @@ jobs:
         env:
           RUNNER_IP: ${{ steps.ip.outputs.address }}
         run: |
+          set -e
+
           az network nsg rule create \
             --resource-group rg-itau-demo \
             --nsg-name nsg-itau \
@@ -106,7 +108,36 @@ jobs:
             --source-address-prefixes "$RUNNER_IP/32" \
             --destination-address-prefixes "*" \
             --destination-port-ranges 22 \
+            --no-wait \
             --output none
+
+          echo "Aguardando a regra ficar ativa..."
+
+          for i in $(seq 1 20); do
+            ESTADO=$(az network nsg rule show \
+              --resource-group rg-itau-demo \
+              --nsg-name nsg-itau \
+              --name github-deploy-temporario \
+              --query provisioningState \
+              -o tsv 2>/dev/null) || ESTADO=""
+
+            IP=$(az network nsg rule show \
+              --resource-group rg-itau-demo \
+              --nsg-name nsg-itau \
+              --name github-deploy-temporario \
+              --query sourceAddressPrefix \
+              -o tsv 2>/dev/null) || IP=""
+
+            if [ "$ESTADO" = "Succeeded" ] && [ "$IP" = "$RUNNER_IP/32" ]; then
+              echo "Regra SSH criada com sucesso."
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "A regra SSH não ficou pronta."
+          exit 1
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
