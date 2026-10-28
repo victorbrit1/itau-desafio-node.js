@@ -174,4 +174,5 @@ jobs:
             --resource-group rg-itau-demo \
             --nsg-name nsg-itau \
             --name github-deploy-temporario \
-            --output none
+            --no-wait \
+            --output none 2>/dev/null || true
