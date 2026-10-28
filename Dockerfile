@@ -12,4 +12,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["node", "src/server.js"] 
+CMD ["sh", "-c", "./node_modules/.bin/sequelize-cli db:migrate && exec node src/server.js"]
